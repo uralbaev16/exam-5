@@ -91,27 +91,34 @@ saerchDropEl.addEventListener("click", e => {
         open(`/pages/about.html?q=${id}`, "_self");
     }
 })
+const categoryListEl = document.getElementById("category-list");
 
-function createCategory(data) {
-    ["All", ...data].forEach((category) => {
-      const categoryEl = document.createElement("div");
-      categoryEl.classList.add("category__item");
-      categoryEl.dataset.category = category === "All" ? "/products" : `/products/category/${category.slug || category}`;//+
-      categoryEl.innerHTML = `
-        <div class="category__item__img">
-         <i class="fa-solid fa-list"></i>
-        </div>
-        <p class="category__item__name">${category.name || category}</p>
-      `;
-      categoryCollectionEl.appendChild(categoryEl);
-      categoryEl.addEventListener("click", (e) => {
-         let category = e.currentTarget.dataset.category; 
-         productEndpoint = category;
-         productsCollectionEl.innerHTML = "";
-         fetchProducts(`${category}?limit=${perPageCount}`);
-         if (totalProducts <= perPageCount + (offset * perPageCount)) {
-          btnSeeMore.style.display = "none";
-        }
-      })
+async function getCategories() {
+    try {
+        const response = await fetch(`${BASE_URL}/products/categories`);
+        const categories = await response.json();
+        createCategories(categories);
+    } catch (err) {
+        console.error("Error fetching categories:", err);
+    }
+}
+
+function createCategories(categories) {
+    categories.forEach(category => {
+        const categoryName = category.name;
+        const categoryItem = document.createElement("li");
+        categoryItem.className = "categorie-item";
+        categoryItem.innerHTML = `
+            <p class="item-text">${categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}</p>
+        `;
+        categoryItem.addEventListener("click", () => filterProductsByCategory(categoryName));
+        categoryListEl.appendChild(categoryItem);
     });
-  }
+}
+
+function filterProductsByCategory(category) {
+    wrapper.innerHTML = ''; 
+    getData(`products/category/${category}`, 0);
+}
+
+getCategories();
